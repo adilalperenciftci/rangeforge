@@ -18,15 +18,15 @@
   "techniques": [
     {
       "techniqueID": "T1003.001",
-      "score": 54,
-      "comment": "7/13 samples detected; Potential Credential Dumping Activity Via LSASS (6), LSASS Memory Access by Tool With Dump Keyword In Name (4), Potentially Suspicious AccessMask Requested From LSASS (2), LSASS Process Memory Dump Files (2), LSASS Access From Non System Account (1)",
+      "score": 67,
+      "comment": "12/18 samples detected; Potential Credential Dumping Activity Via LSASS (16), LSASS Process Access (11), LSASS Memory Access by Tool With Dump Keyword In Name (7), LSASS Process Memory Dump Files (4), Suspicious Process Access to LSASS with Dbgcore/Dbghelp DLLs (3)",
       "enabled": true,
       "showSubtechniques": true
     },
     {
       "techniqueID": "T1003.002",
       "score": 0,
-      "comment": "0/1 samples detected; no matching rule",
+      "comment": "0/2 samples detected; no matching rule",
       "enabled": true,
       "showSubtechniques": true
     },
@@ -45,23 +45,30 @@
       "showSubtechniques": true
     },
     {
+      "techniqueID": "T1014",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
       "techniqueID": "T1021.001",
-      "score": 31,
-      "comment": "4/13 samples detected; RDP over Reverse SSH Tunnel WFP (4), Outbound RDP Connections Over Non-Standard Tools (4), RDP Login from Localhost (2), Security Eventlog Cleared (1), Admin User Remote Logon (1)",
+      "score": 29,
+      "comment": "4/14 samples detected; Successful Logon (9), RDP over Reverse SSH Tunnel WFP (4), Outbound RDP Connections Over Non-Standard Tools (4), RDP Login from Localhost (2), Security Eventlog Cleared (1)",
       "enabled": true,
       "showSubtechniques": true
     },
     {
       "techniqueID": "T1021.002",
-      "score": 33,
-      "comment": "2/6 samples detected; Gzip Archive Decode Via PowerShell (3), Base64 Encoded PowerShell Command Detected (3), Suspicious FromBase64String Usage On Gzip Archive - Process Creation (3), Suspicious PowerShell Invocations - Specific - ProcessCreation (3), Suspicious SYSTEM User Process Creation (3)",
+      "score": 17,
+      "comment": "2/12 samples detected; Gzip Archive Decode Via PowerShell (3), Base64 Encoded PowerShell Command Detected (3), Suspicious FromBase64String Usage On Gzip Archive - Process Creation (3), Suspicious PowerShell Invocations - Specific - ProcessCreation (3), Suspicious SYSTEM User Process Creation (3)",
       "enabled": true,
       "showSubtechniques": true
     },
     {
       "techniqueID": "T1021.003",
-      "score": 0,
-      "comment": "0/3 samples detected; no matching rule",
+      "score": 25,
+      "comment": "1/4 samples detected; HackTool - Potential Impacket Lateral Movement Activity (3), MMC Spawning Windows Shell (3), Suspicious Redirection to Local Admin Share (3), MMC20 Lateral Movement (1), Whoami.EXE Execution With Output Option (1)",
       "enabled": true,
       "showSubtechniques": true
     },
@@ -74,8 +81,15 @@
     },
     {
       "techniqueID": "T1033",
-      "score": 100,
-      "comment": "1/1 samples detected; HackTool - CrackMapExec Execution Patterns (3), HackTool - Potential Impacket Lateral Movement Activity (3), Suspicious Redirection to Local Admin Share (3), WmiPrvSE Spawned A Process (3), Whoami.EXE Execution With Output Option (1)",
+      "score": 25,
+      "comment": "1/4 samples detected; HackTool - CrackMapExec Execution Patterns (3), HackTool - Potential Impacket Lateral Movement Activity (3), Suspicious Redirection to Local Admin Share (3), WmiPrvSE Spawned A Process (3), Whoami.EXE Execution With Output Option (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1036",
+      "score": 50,
+      "comment": "1/2 samples detected; Hidden Local User Creation (2), New or Renamed User Account with '$' Character (2), Local User Creation (2)",
       "enabled": true,
       "showSubtechniques": false
     },
@@ -87,44 +101,100 @@
       "showSubtechniques": false
     },
     {
+      "techniqueID": "T1049",
+      "score": 0,
+      "comment": "0/2 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
       "techniqueID": "T1053.005",
-      "score": 20,
-      "comment": "1/5 samples detected; Wscript Shell Run In CommandLine (2), Mshtml.DLL RunHTMLApplication Suspicious Usage (2), Windows Shell/Scripting Processes Spawning Suspicious Programs (2), Rundll32 Execution With Uncommon DLL Extension (1), Remotely Hosted HTA File Executed Via Mshta.EXE (1)",
+      "score": 38,
+      "comment": "3/8 samples detected; Successful Logon (3), Wscript Shell Run In CommandLine (2), Mshtml.DLL RunHTMLApplication Suspicious Usage (2), Windows Shell/Scripting Processes Spawning Suspicious Programs (2), Scheduled Task Creation Via Schtasks.EXE (2)",
       "enabled": true,
       "showSubtechniques": true
     },
     {
       "techniqueID": "T1055",
-      "score": 100,
-      "comment": "1/1 samples detected; Remote Thread Creation In Uncommon Target Image (9), Rundll32 Execution With Uncommon DLL Extension (1), Rundll32 Execution Without Parameters (1), Bad Opsec Defaults Sacrificial Processes With Improper Arguments (1), Suspicious Process Parents (1)",
+      "score": 80,
+      "comment": "4/5 samples detected; Remote Thread Creation In Uncommon Target Image (9), Uncommon Process Access Rights For Target Image (3), Potential Direct Syscall of NtOpenProcess (1), Uncommon Child Process Of Conhost.EXE (1), Rundll32 Execution With Uncommon DLL Extension (1)",
       "enabled": true,
       "showSubtechniques": false
     },
     {
       "techniqueID": "T1055.012",
-      "score": 100,
-      "comment": "1/1 samples detected; Potential JLI.dll Side-Loading (2), Windows Processes Suspicious Parent Directory (1), Suspect Svchost Activity (1), Uncommon Svchost Command Line Parameter (1), Uncommon Svchost Parent Process (1)",
+      "score": 50,
+      "comment": "1/2 samples detected; Potential JLI.dll Side-Loading (2), Windows Processes Suspicious Parent Directory (1), Suspect Svchost Activity (1), Uncommon Svchost Command Line Parameter (1), Uncommon Svchost Parent Process (1)",
       "enabled": true,
       "showSubtechniques": true
     },
     {
+      "techniqueID": "T1056.001",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1057",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
       "techniqueID": "T1059.001",
-      "score": 56,
-      "comment": "5/9 samples detected; Remote Thread Creation In Uncommon Target Image (82), Sysmon Configuration Change (2), Local Accounts Discovery (2), Malicious PowerShell Keywords (1), Suspicious Process Discovery With Get-Process (1)",
+      "score": 29,
+      "comment": "5/17 samples detected; Remote Thread Creation In Uncommon Target Image (82), Sysmon Configuration Change (2), Local Accounts Discovery (2), Malicious PowerShell Keywords (1), Suspicious Process Discovery With Get-Process (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1059.003",
+      "score": 40,
+      "comment": "2/5 samples detected; Potential Arbitrary Command Execution Via FTP.EXE (1), Explorer Process Tree Break (1), PowerShell Base64 Encoded IEX Cmdlet (1), Base64 Encoded PowerShell Command Detected (1), Script Interpreter Execution From Suspicious Folder (1)",
       "enabled": true,
       "showSubtechniques": true
     },
     {
       "techniqueID": "T1059.005",
       "score": 100,
-      "comment": "1/1 samples detected; Cab File Extraction Via Wusa.EXE From Potentially Suspicious Paths (8), Cmd Launched with Hidden Start Flags to Suspicious Targets (1), Wscript Shell Run In CommandLine (1)",
+      "comment": "2/2 samples detected; Cab File Extraction Via Wusa.EXE From Potentially Suspicious Paths (8), Script Interpreter Execution From Suspicious Folder (1), Potential Dropper Script Execution Via WScript/CScript/MSHTA (1), Local Network Connection Initiated By Script Interpreter (1), Cmd Launched with Hidden Start Flags to Suspicious Targets (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1059.007",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
       "enabled": true,
       "showSubtechniques": true
     },
     {
       "techniqueID": "T1068",
       "score": 0,
-      "comment": "0/4 samples detected; no matching rule",
+      "comment": "0/13 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1069.001",
+      "score": 0,
+      "comment": "0/2 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1069.002",
+      "score": 100,
+      "comment": "1/1 samples detected; Password Policy Enumerated (8), AD Privileged Users or Groups Reconnaissance (6), Reconnaissance Activity (6), Security Eventlog Cleared (1), Successful Logon (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1070",
+      "score": 100,
+      "comment": "1/1 samples detected; RunMRU Registry Key Deletion - Registry (3)",
       "enabled": true,
       "showSubtechniques": false
     },
@@ -143,6 +213,20 @@
       "showSubtechniques": true
     },
     {
+      "techniqueID": "T1082",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1087.001",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
       "techniqueID": "T1087.002",
       "score": 0,
       "comment": "0/1 samples detected; no matching rule",
@@ -151,24 +235,101 @@
     },
     {
       "techniqueID": "T1098",
+      "score": 20,
+      "comment": "1/5 samples detected; Password Change on Directory Service Restore Mode (DSRM) Account (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1105",
+      "score": 50,
+      "comment": "1/2 samples detected; Suspicious Desktopimgdownldr Command (2), Suspicious Desktopimgdownldr Target File (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1110.001",
       "score": 100,
-      "comment": "1/1 samples detected; Password Change on Directory Service Restore Mode (DSRM) Account (1)",
+      "comment": "1/1 samples detected; MSSQL Server Failed Logon (10)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1110.003",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1112",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1127",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
       "enabled": true,
       "showSubtechniques": false
     },
     {
       "techniqueID": "T1134",
       "score": 0,
-      "comment": "0/3 samples detected; no matching rule",
+      "comment": "0/6 samples detected; no matching rule",
       "enabled": true,
       "showSubtechniques": false
     },
     {
       "techniqueID": "T1134.001",
-      "score": 40,
-      "comment": "2/5 samples detected; Meterpreter or Cobalt Strike Getsystem Service Installation - System (1), Suspicious Service Installation (1), Uncommon Service Installation Image Path (1), Potential Meterpreter/CobaltStrike Activity (1), Abused Debug Privilege by Arbitrary Parent Processes (1)",
+      "score": 17,
+      "comment": "2/12 samples detected; Meterpreter or Cobalt Strike Getsystem Service Installation - System (1), Suspicious Service Installation (1), Uncommon Service Installation Image Path (1), Potential Meterpreter/CobaltStrike Activity (1), Abused Debug Privilege by Arbitrary Parent Processes (1)",
       "enabled": true,
       "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1134.002",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1134.004",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1135",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1136.001",
+      "score": 50,
+      "comment": "1/2 samples detected; Creation of a Local Hidden User Account by Registry (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1136.002",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1137",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
     },
     {
       "techniqueID": "T1178",
@@ -187,6 +348,13 @@
     {
       "techniqueID": "T1187",
       "score": 0,
+      "comment": "0/2 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1189",
+      "score": 0,
       "comment": "0/1 samples detected; no matching rule",
       "enabled": true,
       "showSubtechniques": false
@@ -199,16 +367,58 @@
       "showSubtechniques": false
     },
     {
-      "techniqueID": "T1218",
-      "score": 57,
-      "comment": "4/7 samples detected; Potentially Suspicious Rundll32 Activity (8), Suspicious Mshta.EXE Execution Patterns (1), Windows Shell/Scripting Processes Spawning Suspicious Programs (1)",
+      "techniqueID": "T1203",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
       "enabled": true,
       "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1204.002",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1207",
+      "score": 100,
+      "comment": "1/1 samples detected; Possible DC Shadow Attack (2), Security Eventlog Cleared (1), Active Directory Replication from Non Machine Account - DcSync Indicator (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1218",
+      "score": 50,
+      "comment": "4/8 samples detected; Potentially Suspicious Rundll32 Activity (8), Suspicious Mshta.EXE Execution Patterns (1), Windows Shell/Scripting Processes Spawning Suspicious Programs (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1218.001",
+      "score": 100,
+      "comment": "1/1 samples detected; HH.EXE Execution (1), HTML Help HH.EXE Suspicious Child Process (1), Wscript Shell Run In CommandLine (1), Mshtml.DLL RunHTMLApplication Suspicious Usage (1), Suspicious Copy From or To System Directory (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1218.002",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
     },
     {
       "techniqueID": "T1218.005",
       "score": 50,
       "comment": "2/4 samples detected; Wscript Shell Run In CommandLine (2), Mshtml.DLL RunHTMLApplication Suspicious Usage (2), Windows Shell/Scripting Processes Spawning Suspicious Programs (2), Rundll32 Execution With Uncommon DLL Extension (1), Remotely Hosted HTA File Executed Via Mshta.EXE (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1218.007",
+      "score": 50,
+      "comment": "1/2 samples detected; MSI Installation From Web (2)",
       "enabled": true,
       "showSubtechniques": true
     },
@@ -227,6 +437,34 @@
       "showSubtechniques": true
     },
     {
+      "techniqueID": "T1220",
+      "score": 100,
+      "comment": "1/1 samples detected; Msxsl.EXE Execution (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1484.001",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1505.001",
+      "score": 0,
+      "comment": "0/4 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1505.003",
+      "score": 33,
+      "comment": "1/3 samples detected; Local Accounts Discovery (2), Suspicious Process By Web Server Process (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
       "techniqueID": "T1543.003",
       "score": 0,
       "comment": "0/8 samples detected; no matching rule",
@@ -234,23 +472,156 @@
       "showSubtechniques": true
     },
     {
+      "techniqueID": "T1546",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1546.003",
+      "score": 100,
+      "comment": "1/1 samples detected; WMI Event Subscription (6), LSASS Process Access (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1546.008",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1546.011",
+      "score": 50,
+      "comment": "1/2 samples detected; Potential Persistence Via Shim Database Modification (30), Suspicious SYSTEM User Process Creation (22), Potential Shim Database Persistence via Sdbinst.EXE (11), New Custom Shim Database Created (6), Gpscript Execution (4)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1546.012",
+      "score": 100,
+      "comment": "1/1 samples detected; Potential Persistence Via GlobalFlags (3), CurrentVersion NT Autorun Keys Modification (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1546.015",
+      "score": 50,
+      "comment": "1/2 samples detected; Potential COM Object Hijacking Via TreatAs Subkey - Registry (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1547",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
       "techniqueID": "T1547.001",
       "score": 100,
-      "comment": "1/1 samples detected; CurrentVersion Autorun Keys Modification (1)",
+      "comment": "4/4 samples detected; Startup Folder File Write (2), Hijack Legit RDP Session to Move Laterally (1), CurrentVersion Autorun Keys Modification (1), Modify User Shell Folders Startup Value (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1547.004",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
       "enabled": true,
       "showSubtechniques": true
     },
     {
       "techniqueID": "T1548.002",
-      "score": 68,
-      "comment": "25/37 samples detected; HackTool - UACMe Akagi Execution (22), Unusual Parent Process For Cmd.EXE (5), CMSTP UAC Bypass via COM Object Access (4), Sdclt Child Processes (3), Bypass UAC Using DelegateExecute (3)",
+      "score": 66,
+      "comment": "25/38 samples detected; HackTool - UACMe Akagi Execution (22), Unusual Parent Process For Cmd.EXE (5), CMSTP UAC Bypass via COM Object Access (4), Sdclt Child Processes (3), Bypass UAC Using DelegateExecute (3)",
       "enabled": true,
       "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1550.002",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1552.001",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1553.006",
+      "score": 0,
+      "comment": "0/2 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1555",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1555.003",
+      "score": 0,
+      "comment": "0/2 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1555.004",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1555.005",
+      "score": 100,
+      "comment": "2/2 samples detected; Remote Thread Created In KeePass.EXE (3)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1557.001",
+      "score": 0,
+      "comment": "0/3 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1558",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
     },
     {
       "techniqueID": "T1558.003",
       "score": 0,
       "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1562.001",
+      "score": 0,
+      "comment": "0/3 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1562.002",
+      "score": 0,
+      "comment": "0/3 samples detected; no matching rule",
       "enabled": true,
       "showSubtechniques": true
     },
@@ -269,11 +640,32 @@
       "showSubtechniques": true
     },
     {
-      "techniqueID": "T1569.002",
-      "score": 50,
-      "comment": "2/4 samples detected; Gzip Archive Decode Via PowerShell (3), Base64 Encoded PowerShell Command Detected (3), Suspicious FromBase64String Usage On Gzip Archive - Process Creation (3), Suspicious PowerShell Invocations - Specific - ProcessCreation (3), Suspicious SYSTEM User Process Creation (3)",
+      "techniqueID": "T1564",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1564.001",
+      "score": 100,
+      "comment": "1/1 samples detected; Hiding Files with Attrib.exe (1)",
       "enabled": true,
       "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1569.002",
+      "score": 40,
+      "comment": "2/5 samples detected; Gzip Archive Decode Via PowerShell (3), Base64 Encoded PowerShell Command Detected (3), Suspicious FromBase64String Usage On Gzip Archive - Process Creation (3), Suspicious PowerShell Invocations - Specific - ProcessCreation (3), Suspicious SYSTEM User Process Creation (3)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1570",
+      "score": 0,
+      "comment": "0/2 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
     },
     {
       "techniqueID": "T1572",
@@ -283,9 +675,23 @@
       "showSubtechniques": false
     },
     {
+      "techniqueID": "T1574.001",
+      "score": 20,
+      "comment": "1/5 samples detected; Fax Service DLL Search Order Hijack (1), Local Accounts Discovery (1), Whoami.EXE Execution From Privileged Process (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
       "techniqueID": "T1574.002",
       "score": 0,
       "comment": "0/2 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1574.009",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
       "enabled": true,
       "showSubtechniques": true
     }
@@ -316,7 +722,7 @@
     },
     {
       "name": "rules",
-      "value": "2425"
+      "value": "2428"
     }
   ],
   "showTacticRowBackground": true,

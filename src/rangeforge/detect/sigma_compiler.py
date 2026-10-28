@@ -145,17 +145,74 @@ def _regex_flags(value: SigmaRegularExpression) -> int:
     return flags
 
 
+# Per-event cache of lower-cased field values. Long values (script blocks,
+# command lines) are matched by hundreds of rules per event; folding them once
+# is the single biggest win in the engine. The engine clears it per event; the
+# engine itself is single-threaded.
+_LOWER: dict[str, str] = {}
+
+
+def reset_eval_cache() -> None:
+    _LOWER.clear()
+
+
+def _lower(s: str) -> str:
+    # Keyed by the string itself: CPython caches str hashes, so repeated
+    # lookups of the same long value cost one hash in total.
+    cached = _LOWER.get(s)
+    if cached is None:
+        cached = s.lower()
+        _LOWER[s] = cached
+    return cached
+
+
+def _identity(s: str) -> str:
+    return s
+
+
+def _affix_form(value: SigmaString) -> tuple[str, str] | None:
+    """Recognise ``*x*`` / ``*x`` / ``x*`` / ``x`` shapes that need no regex.
+
+    Returns (mode, text) with mode in contains|endswith|startswith|exact, or
+    None when the pattern has inner wildcards.
+    """
+    parts = list(value.s)
+    lead = trail = False
+    while parts and parts[0] is SpecialChars.WILDCARD_MULTI:
+        parts.pop(0)
+        lead = True
+    while parts and parts[-1] is SpecialChars.WILDCARD_MULTI:
+        parts.pop()
+        trail = True
+    if any(not isinstance(part, str) for part in parts):
+        return None
+    text = "".join(str(part) for part in parts)
+    if lead and trail:
+        return "contains", text
+    if lead:
+        return "endswith", text
+    if trail:
+        return "startswith", text
+    return "exact", text
+
+
 def _string_matcher(value: SigmaString) -> ValueMatcher:
     fold = not isinstance(value, SigmaCasedString)
+    affix = _affix_form(value)
+    if affix is not None:
+        mode, text = affix
+        needle = text.lower() if fold else text
+        norm = _lower if fold else _identity
+        if mode == "exact":
+            return lambda v: any(norm(s) == needle for s in _as_strings(v))
+        if mode == "contains":
+            return lambda v: any(needle in norm(s) for s in _as_strings(v))
+        if mode == "endswith":
+            return lambda v: any(norm(s).endswith(needle) for s in _as_strings(v))
+        return lambda v: any(norm(s).startswith(needle) for s in _as_strings(v))
+
     flags = re.DOTALL | (re.IGNORECASE if fold else 0)
     pattern = re.compile(sigma_string_to_regex(value), flags)
-    if not value.contains_special():
-        plain = str(value).lower() if fold else str(value)
-
-        def exact(v: Any) -> bool:
-            return any((s.lower() if fold else s) == plain for s in _as_strings(v))
-
-        return exact
 
     def wildcard(v: Any) -> bool:
         return any(pattern.fullmatch(s) is not None for s in _as_strings(v))
@@ -312,6 +369,57 @@ def attack_tags(tags: Iterable[Any]) -> tuple[tuple[str, ...], tuple[str, ...]]:
     return tuple(techniques), tuple(tactics)
 
 
+def _event_ids_in(node: Any) -> frozenset[int] | None:
+    """Static EventID constraint implied by a condition, or None if unbounded.
+
+    ``EventID: 4624`` (or a list) under AND/OR is recognised; anything negated
+    or non-numeric leaves the rule unbounded.
+    """
+    if isinstance(node, ConditionFieldEqualsValueExpression):
+        if node.field != "EventID":
+            return None
+        value = node.value
+        if isinstance(value, SigmaNumber):
+            return frozenset({int(value.number)})
+        if isinstance(value, SigmaString) and not value.contains_special():
+            text = str(value)
+            return frozenset({int(text)}) if text.isdigit() else None
+        return None
+    if isinstance(node, ConditionOR):
+        out: set[int] = set()
+        for arg in node.args:
+            ids = _event_ids_in(arg)
+            if ids is None:
+                return None
+            out |= ids
+        return frozenset(out)
+    if isinstance(node, ConditionAND):
+        found: frozenset[int] | None = None
+        for arg in node.args:
+            ids = _event_ids_in(arg)
+            if ids is not None:
+                found = ids if found is None else (found & ids)
+        return found
+    return None
+
+
+def _narrow_filter(event_filter: EventFilter, conditions: list[Any]) -> EventFilter:
+    if event_filter.unrestricted or event_filter.event_ids() is not None:
+        return event_filter
+    union: set[int] = set()
+    for cond in conditions:
+        ids = _event_ids_in(cond.parsed)
+        if ids is None:
+            return event_filter
+        union |= ids
+    if not union:
+        return event_filter
+    channels: dict[str, frozenset[int] | None] = dict.fromkeys(
+        event_filter.channels, frozenset(union)
+    )
+    return EventFilter(channels=channels, aliases=event_filter.aliases)
+
+
 def compile_rule(rule: SigmaRule, *, source: str | None = None) -> CompiledRule:
     """Compile one parsed Sigma rule. Raises RuleCompileError for unsupported features."""
     conditions = rule.detection.parsed_condition
@@ -336,7 +444,9 @@ def compile_rule(rule: SigmaRule, *, source: str | None = None) -> CompiledRule:
         status=str(rule.status.name).lower() if rule.status else "unknown",
         techniques=techniques,
         tactics=tactics,
-        event_filter=resolve_logsource(ls.product, ls.category, ls.service),
+        event_filter=_narrow_filter(
+            resolve_logsource(ls.product, ls.category, ls.service), list(conditions)
+        ),
         predicate=predicate,
         fields=tuple(rule.fields or ()),
         source=source,

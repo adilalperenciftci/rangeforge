@@ -17,7 +17,12 @@ from sigma.rule import SigmaRule
 
 from rangeforge.detect.alerts import Alert
 from rangeforge.detect.correlation import CompiledCorrelation, compile_correlation
-from rangeforge.detect.sigma_compiler import CompiledRule, RuleCompileError, compile_rule
+from rangeforge.detect.sigma_compiler import (
+    CompiledRule,
+    RuleCompileError,
+    compile_rule,
+    reset_eval_cache,
+)
 from rangeforge.schema.events import NormalizedEvent
 
 log = logging.getLogger(__name__)
@@ -118,32 +123,33 @@ class DetectionEngine:
         rules are always skipped.
         """
         before = self.stats.rules_loaded
-        files: list[Path] = []
-        for p in paths:
-            files.extend(sorted(p.rglob("*.yml")) if p.is_dir() else [p])
-        for file in files:
+        for path in paths:
             try:
-                collection = SigmaCollection.load_ruleset([str(file)], collect_errors=True)
+                # One load per path: pySigma resolves cross-file references
+                # (correlations) within a collection and is far faster than a
+                # call per file.
+                collection = SigmaCollection.load_ruleset([str(path)], collect_errors=True)
             except SigmaError as exc:
                 self.stats.rules_failed += 1
-                self.stats.failures[str(file)] = str(exc)
+                self.stats.failures[str(path)] = str(exc)
                 continue
             for item in collection.rules:
+                source = str(item.source.path) if item.source and item.source.path else str(path)
                 if isinstance(item, SigmaCorrelationRule):
-                    self.add_correlation(item, source=str(file))
+                    self.add_correlation(item, source=source)
                     continue
                 if not isinstance(item, SigmaRule):
                     continue
                 if item.errors:
                     self.stats.rules_failed += 1
-                    self.stats.failures[str(file)] = "; ".join(str(e) for e in item.errors)
+                    self.stats.failures[source] = "; ".join(str(e) for e in item.errors)
                     continue
                 status = str(item.status.name).lower() if item.status else "unknown"
                 if status in {"deprecated", "unsupported"}:
                     continue
                 if include_status and status not in include_status:
                     continue
-                self.add_sigma(item, source=str(file))
+                self.add_sigma(item, source=source)
         return self.stats.rules_loaded - before
 
     # ------------------------------------------------------------------ matching
@@ -156,6 +162,7 @@ class DetectionEngine:
 
     def evaluate(self, event: NormalizedEvent) -> list[Alert]:
         self.stats.events_seen += 1
+        reset_eval_cache()
         alerts: list[Alert] = []
         for rule in self.candidates(event):
             try:
