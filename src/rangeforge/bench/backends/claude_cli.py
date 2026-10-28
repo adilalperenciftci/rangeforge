@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import time
 from typing import Any
@@ -22,8 +23,9 @@ class ClaudeCliBackend(Backend):
     def complete(
         self, system: str, user: str, *, json_schema: dict[str, Any] | None = None
     ) -> Completion:
+        binary = shutil.which(self.options.get("binary", "claude")) or "claude"
         cmd = [
-            self.options.get("binary", "claude"),
+            binary,
             "-p",
             "--output-format",
             "json",
@@ -34,11 +36,16 @@ class ClaudeCliBackend(Backend):
             "--tools",
             "",
             "--no-session-persistence",
-            "--bare",
-        ]
+        ]  # note: --bare would skip credential loading and break auth
         if json_schema:
             cmd += ["--json-schema", json.dumps(json_schema)]
-        env = {k: v for k, v in os.environ.items() if not k.startswith("CLAUDE")}
+        # Drop the variables that mark a nested Claude Code session, but keep the
+        # config dir so the operator's login is found.
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            if not k.startswith("CLAUDE") or k == "CLAUDE_CONFIG_DIR"
+        }
         started = time.perf_counter()
         try:
             proc = subprocess.run(
@@ -50,7 +57,6 @@ class ClaudeCliBackend(Backend):
                 timeout=self.options.get("timeout", 300),
                 env=env,
                 check=False,
-                shell=os.name == "nt",
             )
         except subprocess.TimeoutExpired:
             return Completion("", self.model, time.perf_counter() - started, error="timeout")

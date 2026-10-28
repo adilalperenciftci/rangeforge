@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import time
@@ -17,43 +18,48 @@ from rangeforge.bench.backends.base import Backend, Completion
 class CodexCliBackend(Backend):
     name = "codex-cli"
 
+    DEFAULT = "codex-default"
+
     @classmethod
     def default_model(cls) -> str:
-        return "gpt-5.5"
+        # The Codex CLI picks the model allowed for the signed-in account; pass
+        # -m only when the operator names one explicitly.
+        return cls.DEFAULT
 
     def complete(
         self, system: str, user: str, *, json_schema: dict[str, Any] | None = None
     ) -> Completion:
         prompt = f"{system}\n\n{user}"
         schema_file: Path | None = None
+        binary = shutil.which(self.options.get("binary", "codex")) or "codex"
         cmd = [
-            self.options.get("binary", "codex"),
+            binary,
             "exec",
             "--json",
             "--ephemeral",
             "--skip-git-repo-check",
             "--sandbox",
             "read-only",
-            "-m",
-            self.model,
         ]
+        if self.model != self.DEFAULT:
+            cmd += ["-m", self.model]
         if json_schema:
             fd, name = tempfile.mkstemp(suffix=".json", prefix="rf-schema-")
             os.close(fd)
             schema_file = Path(name)
             schema_file.write_text(json.dumps(json_schema), encoding="utf-8")
             cmd += ["--output-schema", str(schema_file)]
-        cmd.append(prompt)
+        cmd.append("-")  # read the prompt from stdin: avoids Windows argv length limits
         started = time.perf_counter()
         try:
             proc = subprocess.run(
                 cmd,
+                input=prompt,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
                 timeout=self.options.get("timeout", 300),
                 check=False,
-                shell=os.name == "nt",
             )
         except subprocess.TimeoutExpired:
             return Completion("", self.model, time.perf_counter() - started, error="timeout")
@@ -62,11 +68,12 @@ class CodexCliBackend(Backend):
                 schema_file.unlink(missing_ok=True)
         latency = time.perf_counter() - started
         if proc.returncode != 0:
+            detail = proc.stderr.strip() or proc.stdout.strip()[-300:]
             return Completion(
                 "",
                 self.model,
                 latency,
-                error=f"exit {proc.returncode}: {proc.stderr.strip()[:300]}",
+                error=f"exit {proc.returncode}: {detail[:300]}",
             )
 
         # --json streams one JSON event per line; the final agent message holds the answer.
