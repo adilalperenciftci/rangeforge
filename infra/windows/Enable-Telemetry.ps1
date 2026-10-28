@@ -13,6 +13,7 @@
 .PARAMETER SysmonConfigUrl
     Sysmon XML configuration to apply. Defaults to SwiftOnSecurity/sysmon-config.
 #>
+# rangeforge-collector: tagged so the telemetry collector can drop its own script-block events
 [CmdletBinding()]
 param(
     [string]$SysmonConfigUrl = 'https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml',

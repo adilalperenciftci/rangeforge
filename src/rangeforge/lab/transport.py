@@ -184,6 +184,7 @@ class WinRmTransport:
             if not result.ok:
                 return result
         runner = (
+            "# rangeforge-collector\n"
             f'$b = [Convert]::FromBase64String((Get-Content -LiteralPath "{remote}" -Raw)); '
             f"$s = [Text.Encoding]::Unicode.GetString($b); "
             f'$f = "{remote}.run.ps1"; Set-Content -LiteralPath $f -Value $s -Encoding Unicode; '

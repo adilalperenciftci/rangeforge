@@ -27,6 +27,17 @@ ingests, detects, measures and benchmarks.
                                      └──────────────┘    └───────────────────┘
 ```
 
+## Demos
+
+Every GIF below is real output, rendered by `tools/make_demo_gifs.py` from a
+captured run (no screen recorder, reproducible with `--cached`).
+
+| | |
+|---|---|
+| **Compile every SigmaHQ Windows rule**<br>![rules stats](docs/demo/rules-stats.gif) | **Measure ATT&CK coverage on labelled telemetry**<br>![coverage](docs/demo/coverage.gif) |
+| **Live lab sensors**<br>![lab status](docs/demo/lab-status.gif) | **Pull live telemetry and run the rules**<br>![lab collect](docs/demo/lab-collect.gif) |
+| **Hardening posture with CIS references**<br>![harden](docs/demo/harden.gif) | **LLM SOC-analyst leaderboard**<br>![bench](docs/demo/bench.gif) |
+
 ## What is in the box
 
 | Layer | What it does | Status |

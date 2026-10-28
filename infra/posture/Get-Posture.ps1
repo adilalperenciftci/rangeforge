@@ -8,6 +8,7 @@
     remote access, Defender, UAC, account policy). Emits one JSON object on
     stdout; every value is a plain string, number or boolean.
 #>
+# rangeforge-collector: tagged so the telemetry collector can drop its own script-block events
 [CmdletBinding()]
 param()
 $ErrorActionPreference = 'SilentlyContinue'

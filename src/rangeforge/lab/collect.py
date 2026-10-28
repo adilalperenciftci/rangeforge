@@ -55,7 +55,13 @@ class Bookmarks(BaseModel):
 
 # PowerShell: read events after a RecordId and print one JSON object per line
 # in the evtx-parser shape. Values are strings, which is what EventData holds.
+# Every script we run on a target carries this marker so the collector can drop
+# the PowerShell script-block / module events it generates itself. Without it,
+# script-block logging turns each collection round into new events for the next.
+SELF_MARKER = "rangeforge-collector"
+
 _PS_COLLECT = r"""
+# rangeforge-collector
 $ErrorActionPreference = 'Stop'
 $channel = '{channel}'
 $since = {since}
@@ -116,11 +122,24 @@ def _iter_json_lines(text: str) -> Iterator[dict[str, Any]]:
             continue
 
 
+def _is_self_noise(record: dict[str, Any]) -> bool:
+    """True for PowerShell logging events produced by the collector's own scripts."""
+    data = record.get("Event", {}).get("EventData") or {}
+    for key in ("ScriptBlockText", "Payload", "ContextInfo"):
+        value = data.get(key)
+        if isinstance(value, str) and SELF_MARKER in value:
+            return True
+    return False
+
+
 class WindowsCollector:
-    def __init__(self, host: Host, bookmarks: Bookmarks, *, batch: int = 5000) -> None:
+    def __init__(
+        self, host: Host, bookmarks: Bookmarks, *, batch: int = 5000, drop_self_noise: bool = True
+    ) -> None:
         self.host = host
         self.bookmarks = bookmarks
         self.batch = batch
+        self.drop_self_noise = drop_self_noise
         self.transport = WinRmTransport(host)
 
     def channels(self) -> tuple[str, ...]:
@@ -140,6 +159,8 @@ class WindowsCollector:
                     count += 1
                     rid = int(record["Event"]["System"]["EventRecordID"])
                     since = max(since, rid)
+                    if self.drop_self_noise and _is_self_noise(record):
+                        continue
                     yield normalize_windows_record(
                         record, source_file=f"{self.host.name}:{channel}"
                     )
@@ -175,12 +196,17 @@ class AuditdCollector:
     def collect(self) -> Iterator[NormalizedEvent]:
         last = self.bookmarks.linux.get(self.host.name)
         if last:
+            # ausearch parses -ts with the remote locale and time zone; pin both
+            # to UTC on both sides so the window is exact regardless of the
+            # operator's or the target's zone.
             epoch = float(last.split(":")[0])
-            start = datetime.fromtimestamp(epoch, tz=UTC).astimezone()
-            when = f"-ts {start.strftime('%m/%d/%Y %H:%M:%S')}"
+            start = datetime.fromtimestamp(epoch, tz=UTC)
+            when = f"-ts {start.strftime('%m/%d/%y %H:%M:%S')}"  # C-locale form
         else:
             when = "-ts today"
-        result = self.transport.run(f"ausearch --raw --input-logs {when}", sudo=True)
+        result = self.transport.run(
+            f"env TZ=UTC LC_ALL=C ausearch --raw --input-logs {when}", sudo=True
+        )
         if result.code not in (0, 1):  # 1 = no matches
             raise RuntimeError(f"{self.host.name}: {result.stderr.strip()[:300]}")
         last_seen = last

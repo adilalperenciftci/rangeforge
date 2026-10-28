@@ -19,3 +19,5 @@ dist/
 htmlcov/
 lab.local.yaml
 runs/
+tools/.demo-cache/
+docs/demo/_*.png
