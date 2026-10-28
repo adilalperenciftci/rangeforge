@@ -16,6 +16,7 @@ before the next one starts.
   and Linux rule sets compile with zero failures
 - Event-id indexed streaming evaluation
 - Sigma correlation rules in-stream: event_count, value_count, temporal, temporal_ordered with group-by windows
+- Out-of-order tolerant: per-group watermark, time-sorted buffer, windows anchored in event time (a late 4625 behind an early 4624 is ordered correctly; an event outside `timespan` can never complete a window); late drops are counted
 - Rule-loading cache to cut cold-start time (next)
 
 ## 3. Coverage measurement (done, growing)

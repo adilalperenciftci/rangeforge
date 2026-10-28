@@ -44,7 +44,7 @@ captured run (no screen recorder, reproducible with `--cached`).
 |---|---|---|
 | `rangeforge.schema` | OCSF-aligned `NormalizedEvent` with a flat *native* field view, so Sigma rules run on the names they were written for | done |
 | `rangeforge.ingest` | Windows Sysmon / Security / PowerShell (EVTX files or live) and Linux auditd normalizers | done |
-| `rangeforge.detect` | Sigma rules compiled straight into Python predicates; **all 2,636 SigmaHQ Windows + Linux rules compile with zero failures**; event-id indexed streaming engine; Sigma correlation rules (count / value-count / temporal / ordered) in-stream | done |
+| `rangeforge.detect` | Sigma rules compiled straight into Python predicates; **all 2,636 SigmaHQ Windows + Linux rules compile with zero failures**; event-id indexed streaming engine; Sigma correlation rules (count / value-count / temporal / ordered) in-stream, evaluated over event-time windows with a watermark and a 30 s lateness buffer so out-of-order collector batches cannot forge or miss a sequence | done |
 | `rangeforge.datasets` | Catalog + on-demand fetch of public, ATT&CK-labelled telemetry (EVTX-ATTACK-SAMPLES) | done |
 | `rangeforge.coverage` | Replay labelled samples, score technique/tactic coverage, export an ATT&CK Navigator layer | done |
 | `rangeforge.lab` | Inventory, SSH/WinRM transports, incremental collectors for live hosts, telemetry provisioning scripts | done |
