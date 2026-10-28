@@ -64,9 +64,12 @@ one fresh context per task, no tools.
 
 ## Threats to validity
 
-- **Label granularity.** Technique labels come from capture file names and a
-  keyword table; 128 of 270 captures carry no label and are excluded from the
-  malicious population.
+- **Label granularity.** The v1 task set (the one on the leaderboard) was built
+  when technique labels still came from capture file names and a keyword
+  table: 142 captures were labelled and 128 were excluded from the malicious
+  population. Those 128 have since been hand-labelled
+  (`datasets/labels/evtx-attack-samples.yaml`); a v2 task set built from all
+  270 captures will be reported separately so the two are never mixed.
 - **Context window.** Twelve events is enough for most process-tree decisions
   and not enough for slow, multi-host campaigns. This benchmark measures
   single-alert triage, not investigation.
