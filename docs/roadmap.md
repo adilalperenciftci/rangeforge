@@ -15,7 +15,7 @@ before the next one starts.
 - Sigma rules compiled straight to Python predicates; the full SigmaHQ Windows
   and Linux rule sets compile with zero failures
 - Event-id indexed streaming evaluation
-- Multi-stage correlation (sequence / threshold / value-count windows) (next)
+- Sigma correlation rules in-stream: event_count, value_count, temporal, temporal_ordered with group-by windows
 - Rule-loading cache to cut cold-start time (next)
 
 ## 3. Coverage measurement (done, growing)

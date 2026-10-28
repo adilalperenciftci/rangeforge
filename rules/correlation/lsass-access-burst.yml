@@ -1,0 +1,51 @@
+title: LSASS Process Access
+id: 3c1f6c7a-4b1e-4a4c-9d2a-1a0b5e7f0010
+name: rf_lsass_access
+status: test
+description: Any process opening a handle to lsass.exe with read-memory rights (Sysmon 10). Base rule for correlations; noisy on its own.
+author: Adil Alperen Çiftci
+date: 2026-10-28
+logsource:
+  product: windows
+  category: process_access
+detection:
+  selection:
+    TargetImage|endswith: '\lsass.exe'
+    GrantedAccess|contains:
+      - '0x1010'
+      - '0x1410'
+      - '0x1fffff'
+      - '0x1038'
+      - '0x40'
+  filter_system:
+    SourceImage|startswith:
+      - 'C:\Windows\System32\'
+      - 'C:\Windows\SysWOW64\'
+      - 'C:\Program Files\'
+      - 'C:\Program Files (x86)\'
+  condition: selection and not filter_system
+level: informational
+tags:
+  - attack.credential_access
+  - attack.t1003.001
+---
+title: Multiple Unsigned-Location Tools Touching LSASS
+id: 3c1f6c7a-4b1e-4a4c-9d2a-1a0b5e7f0011
+status: test
+description: Three or more distinct source images outside system paths opened lsass.exe on one host within ten minutes.
+author: Adil Alperen Çiftci
+date: 2026-10-28
+correlation:
+  type: value_count
+  rules:
+    - rf_lsass_access
+  group-by:
+    - Computer
+  timespan: 10m
+  condition:
+    field: SourceImage
+    gte: 3
+level: critical
+tags:
+  - attack.credential_access
+  - attack.t1003.001

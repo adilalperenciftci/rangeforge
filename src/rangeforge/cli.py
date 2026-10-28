@@ -138,7 +138,7 @@ coverage_app = typer.Typer(help="Detection coverage measurement.", no_args_is_he
 app.add_typer(coverage_app, name="coverage")
 
 SIGMA_CACHE = Path("data") / "cache" / "sigma"
-DEFAULT_RULE_DIRS = (SIGMA_CACHE / "rules" / "windows",)
+DEFAULT_RULE_DIRS = (SIGMA_CACHE / "rules" / "windows", Path("rules"))
 
 
 @rules_app.command("pull")
@@ -180,8 +180,13 @@ def _load_engine(rule_dirs: list[Path]) -> DetectionEngine:
     with console.status(f"Compiling rules from {len(rule_dirs)} path(s)..."):
         engine.load_paths(rule_dirs)
     console.print(
-        f"[green]{engine.stats.rules_loaded} rules compiled[/green], "
-        f"{engine.stats.rules_failed} failed"
+        f"[green]{engine.stats.rules_loaded} rules compiled[/green]"
+        + (
+            f", {engine.stats.correlations_loaded} correlations"
+            if engine.stats.correlations_loaded
+            else ""
+        )
+        + f", {engine.stats.rules_failed} failed"
     )
     return engine
 

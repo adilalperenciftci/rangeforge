@@ -1,0 +1,81 @@
+title: Failed Logon
+id: 3c1f6c7a-4b1e-4a4c-9d2a-1a0b5e7f0001
+name: rf_failed_logon
+status: test
+description: A failed network or interactive logon (Security 4625). Base rule for correlations.
+author: Adil Alperen Çiftci
+date: 2026-10-28
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4625
+  condition: selection
+level: informational
+tags:
+  - attack.credential_access
+  - attack.t1110
+---
+title: Successful Logon
+id: 3c1f6c7a-4b1e-4a4c-9d2a-1a0b5e7f0002
+name: rf_successful_logon
+status: test
+description: A successful logon (Security 4624) from the network or console. Base rule for correlations.
+author: Adil Alperen Çiftci
+date: 2026-10-28
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4624
+    LogonType:
+      - 2
+      - 3
+      - 10
+  filter_machine:
+    TargetUserName|endswith: '$'
+  condition: selection and not filter_machine
+level: informational
+---
+title: Password Spraying Burst Against One Host
+id: 3c1f6c7a-4b1e-4a4c-9d2a-1a0b5e7f0003
+status: test
+description: Ten or more failed logons for distinct accounts on one host within five minutes.
+author: Adil Alperen Çiftci
+date: 2026-10-28
+correlation:
+  type: value_count
+  rules:
+    - rf_failed_logon
+  group-by:
+    - Computer
+  timespan: 5m
+  condition:
+    field: TargetUserName
+    gte: 10
+level: high
+tags:
+  - attack.credential_access
+  - attack.t1110.003
+---
+title: Brute Force Followed By Successful Logon
+id: 3c1f6c7a-4b1e-4a4c-9d2a-1a0b5e7f0004
+status: test
+description: Repeated failures for an account followed by a success within ten minutes on the same host.
+author: Adil Alperen Çiftci
+date: 2026-10-28
+correlation:
+  type: temporal_ordered
+  rules:
+    - rf_failed_logon
+    - rf_successful_logon
+  group-by:
+    - Computer
+    - TargetUserName
+  timespan: 10m
+level: high
+tags:
+  - attack.credential_access
+  - attack.t1110.001

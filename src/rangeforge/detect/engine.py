@@ -11,10 +11,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from sigma.collection import SigmaCollection
+from sigma.correlations import SigmaCorrelationRule
 from sigma.exceptions import SigmaError
 from sigma.rule import SigmaRule
 
 from rangeforge.detect.alerts import Alert
+from rangeforge.detect.correlation import CompiledCorrelation, compile_correlation
 from rangeforge.detect.sigma_compiler import CompiledRule, RuleCompileError, compile_rule
 from rangeforge.schema.events import NormalizedEvent
 
@@ -48,6 +50,7 @@ DEFAULT_CONTEXT_FIELDS = (
 class EngineStats:
     rules_loaded: int = 0
     rules_failed: int = 0
+    correlations_loaded: int = 0
     events_seen: int = 0
     alerts: int = 0
     seconds: float = 0.0
@@ -63,6 +66,8 @@ class DetectionEngine:
         self.rules: list[CompiledRule] = []
         self._by_event_id: dict[int, list[CompiledRule]] = defaultdict(list)
         self._any_event_id: list[CompiledRule] = []
+        self.correlations: list[CompiledCorrelation] = []
+        self._corr_by_ref: dict[str, list[CompiledCorrelation]] = defaultdict(list)
         self.stats = EngineStats()
         self.context_fields = context_fields
 
@@ -77,6 +82,19 @@ class DetectionEngine:
             for event_id in ids:
                 self._by_event_id[event_id].append(rule)
         self.stats.rules_loaded += 1
+
+    def add_correlation(self, rule: SigmaCorrelationRule, *, source: str | None = None) -> bool:
+        try:
+            compiled = compile_correlation(rule, source=source)
+        except RuleCompileError as exc:
+            self.stats.rules_failed += 1
+            self.stats.failures[source or rule.title] = str(exc)
+            return False
+        self.correlations.append(compiled)
+        for ref in compiled.rule_refs:
+            self._corr_by_ref[ref].append(compiled)
+        self.stats.correlations_loaded += 1
+        return True
 
     def add_sigma(self, rule: SigmaRule, *, source: str | None = None) -> bool:
         try:
@@ -111,8 +129,11 @@ class DetectionEngine:
                 self.stats.failures[str(file)] = str(exc)
                 continue
             for item in collection.rules:
+                if isinstance(item, SigmaCorrelationRule):
+                    self.add_correlation(item, source=str(file))
+                    continue
                 if not isinstance(item, SigmaRule):
-                    continue  # correlation rules are handled separately
+                    continue
                 if item.errors:
                     self.stats.rules_failed += 1
                     self.stats.failures[str(file)] = "; ".join(str(e) for e in item.errors)
@@ -142,20 +163,36 @@ class DetectionEngine:
             except Exception:  # a broken rule must never stop the stream
                 log.exception("rule %s raised during evaluation", rule.rule_id)
                 continue
-            if hit:
-                alerts.append(
-                    Alert.from_event(
-                        event,
-                        rule_id=rule.rule_id,
-                        rule_title=rule.title,
-                        level=rule.level,
-                        techniques=rule.techniques,
-                        tactics=rule.tactics,
-                        keep_fields=rule.fields or self.context_fields,
-                    )
-                )
+            if not hit:
+                continue
+            alert = Alert.from_event(
+                event,
+                rule_id=rule.rule_id,
+                rule_title=rule.title,
+                level=rule.level,
+                techniques=rule.techniques,
+                tactics=rule.tactics,
+                keep_fields=rule.fields or self.context_fields,
+            )
+            alerts.append(alert)
+            if self.correlations:
+                alerts.extend(self._correlate(event, alert, rule))
         self.stats.alerts += len(alerts)
         return alerts
+
+    def _correlate(self, event: NormalizedEvent, alert: Alert, rule: CompiledRule) -> list[Alert]:
+        keys = rule.keys
+        out: list[Alert] = []
+        seen: set[int] = set()
+        for key in keys:
+            for corr in self._corr_by_ref.get(key, ()):
+                if id(corr) in seen:
+                    continue
+                seen.add(id(corr))
+                fired = corr.feed(event, alert, keys)
+                if fired is not None:
+                    out.append(fired)
+        return out
 
     def run(self, events: Iterable[NormalizedEvent]) -> Iterator[Alert]:
         started = time.perf_counter()

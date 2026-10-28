@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import ipaddress
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Any
 
@@ -55,6 +55,7 @@ class RuleCompileError(Exception):
 class CompiledRule:
     rule_id: str
     title: str
+    name: str | None
     level: str
     status: str
     techniques: tuple[str, ...]
@@ -64,6 +65,11 @@ class CompiledRule:
     fields: tuple[str, ...]
     """Fields the rule author flagged as useful context."""
     source: str | None = None
+
+    @property
+    def keys(self) -> set[str]:
+        """Identifiers a correlation rule may reference this rule by."""
+        return {k for k in (self.rule_id, self.name) if k}
 
     def matches(self, event: NormalizedEvent) -> bool:
         channel = event.native.get("Channel")
@@ -290,10 +296,11 @@ def _compile_condition(node: ConditionItem | Any) -> Predicate:
 # --------------------------------------------------------------------------- rules
 
 
-def _attack_tags(rule: SigmaRule) -> tuple[tuple[str, ...], tuple[str, ...]]:
+def attack_tags(tags: Iterable[Any]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Split Sigma tags into (technique ids, tactic slugs)."""
     techniques: list[str] = []
     tactics: list[str] = []
-    for tag in rule.tags or ():
+    for tag in tags:
         text = str(tag)
         m = _ATTACK_TECHNIQUE.match(text)
         if m:
@@ -319,11 +326,12 @@ def compile_rule(rule: SigmaRule, *, source: str | None = None) -> CompiledRule:
     predicate: Predicate = (
         predicates[0] if len(predicates) == 1 else (lambda e, a: any(p(e, a) for p in predicates))
     )
-    techniques, tactics = _attack_tags(rule)
+    techniques, tactics = attack_tags(rule.tags or ())
     ls = rule.logsource
     return CompiledRule(
         rule_id=str(rule.id) if rule.id else rule.title,
         title=rule.title,
+        name=rule.name,
         level=str(rule.level.name).lower() if rule.level else "medium",
         status=str(rule.status.name).lower() if rule.status else "unknown",
         techniques=techniques,
