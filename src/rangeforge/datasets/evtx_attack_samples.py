@@ -13,6 +13,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import httpx
+import yaml
 
 from rangeforge.datasets.catalog import DEFAULT_CACHE, DatasetEntry, DatasetSource
 from rangeforge.ingest.evtx import iter_evtx
@@ -108,6 +109,24 @@ _KEYWORD_TECHNIQUES: tuple[tuple[str, str], ...] = (
 )
 
 
+_LABELS_FILE = Path(__file__).parent / "labels" / "evtx-attack-samples.yaml"
+_curated: dict[str, tuple[str, ...]] | None = None
+
+
+def curated_labels() -> dict[str, tuple[str, ...]]:
+    """Hand-reviewed technique labels for captures whose names carry no id."""
+    global _curated
+    if _curated is None:
+        raw = yaml.safe_load(_LABELS_FILE.read_text(encoding="utf-8")) or {}
+        _curated = {str(k): tuple(str(t).upper() for t in v) for k, v in raw.items()}
+    return _curated
+
+
+def techniques_for(path: str) -> tuple[str, ...]:
+    """Curated label if one exists, else parsed from the file name."""
+    return curated_labels().get(path) or techniques_from_name(Path(path).stem)
+
+
 def techniques_from_name(name: str) -> tuple[str, ...]:
     found: list[str] = []
     for match in _TECHNIQUE_RE.finditer(name):
@@ -162,7 +181,7 @@ class EvtxAttackSamples(DatasetSource):
                     path=path,
                     url=RAW_BASE + httpx.URL(path).raw_path.decode(),
                     tactic=tactic,
-                    techniques=techniques_from_name(Path(path).stem),
+                    techniques=techniques_for(path),
                     size=int(str(node["size"])) if node.get("size") is not None else None,
                 )
             )

@@ -40,6 +40,7 @@ rf = "rangeforge.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/rangeforge"]
+include = ["src/rangeforge/datasets/labels/*.yaml"]
 
 [tool.ruff]
 line-length = 100

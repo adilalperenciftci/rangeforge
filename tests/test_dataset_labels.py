@@ -17,3 +17,18 @@ from rangeforge.datasets.evtx_attack_samples import techniques_from_name
 )
 def test_techniques_from_name(name: str, expected: tuple[str, ...]) -> None:
     assert techniques_from_name(name) == expected
+
+
+def test_curated_labels_override_and_validate() -> None:
+    import re
+
+    from rangeforge.datasets.evtx_attack_samples import curated_labels, techniques_for
+
+    labels = curated_labels()
+    assert len(labels) >= 120
+    pattern = re.compile(r"^T\d{4}(\.\d{3})?$")
+    for path, techniques in labels.items():
+        assert techniques, path
+        assert all(pattern.match(t) for t in techniques), (path, techniques)
+    assert techniques_for("Discovery/discovery_psloggedon.evtx") == ("T1033",)
+    assert techniques_for("Credential Access/CA_DCSync_4662.evtx") == ("T1003.006",)
