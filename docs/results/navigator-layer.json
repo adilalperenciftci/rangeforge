@@ -1,0 +1,326 @@
+{
+  "name": "RangeForge detection coverage",
+  "versions": {
+    "attack": "16",
+    "navigator": "5.1.0",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "Share of labelled samples per technique where a correctly tagged rule fired.",
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "showID": true,
+    "showName": true
+  },
+  "hideDisabled": false,
+  "techniques": [
+    {
+      "techniqueID": "T1003.001",
+      "score": 54,
+      "comment": "7/13 samples detected; Potential Credential Dumping Activity Via LSASS (6), LSASS Memory Access by Tool With Dump Keyword In Name (4), Potentially Suspicious AccessMask Requested From LSASS (2), LSASS Process Memory Dump Files (2), LSASS Access From Non System Account (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1003.002",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1003.003",
+      "score": 50,
+      "comment": "1/2 samples detected; Ntdsutil Abuse (4), Dump Ntds.dit To Suspicious Location (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1003.006",
+      "score": 50,
+      "comment": "1/2 samples detected; Active Directory Replication from Non Machine Account - DcSync Indicator (3)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1021.001",
+      "score": 31,
+      "comment": "4/13 samples detected; RDP over Reverse SSH Tunnel WFP (4), Outbound RDP Connections Over Non-Standard Tools (4), RDP Login from Localhost (2), Security Eventlog Cleared (1), Admin User Remote Logon (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1021.002",
+      "score": 33,
+      "comment": "2/6 samples detected; Gzip Archive Decode Via PowerShell (3), Base64 Encoded PowerShell Command Detected (3), Suspicious FromBase64String Usage On Gzip Archive - Process Creation (3), Suspicious PowerShell Invocations - Specific - ProcessCreation (3), Suspicious SYSTEM User Process Creation (3)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1021.003",
+      "score": 0,
+      "comment": "0/3 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1021.006",
+      "score": 33,
+      "comment": "1/3 samples detected; Potential Lateral Movement via Windows Remote Shell (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1033",
+      "score": 100,
+      "comment": "1/1 samples detected; HackTool - CrackMapExec Execution Patterns (3), HackTool - Potential Impacket Lateral Movement Activity (3), Suspicious Redirection to Local Admin Share (3), WmiPrvSE Spawned A Process (3), Whoami.EXE Execution With Output Option (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1047",
+      "score": 43,
+      "comment": "3/7 samples detected; WmiPrvSE Spawned A Process (7), HackTool - CrackMapExec Execution Patterns (3), HackTool - Potential Impacket Lateral Movement Activity (3), Suspicious Redirection to Local Admin Share (3), Potentially Suspicious Rundll32 Activity (2)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1053.005",
+      "score": 20,
+      "comment": "1/5 samples detected; Wscript Shell Run In CommandLine (2), Mshtml.DLL RunHTMLApplication Suspicious Usage (2), Windows Shell/Scripting Processes Spawning Suspicious Programs (2), Rundll32 Execution With Uncommon DLL Extension (1), Remotely Hosted HTA File Executed Via Mshta.EXE (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1055",
+      "score": 100,
+      "comment": "1/1 samples detected; Remote Thread Creation In Uncommon Target Image (9), Rundll32 Execution With Uncommon DLL Extension (1), Rundll32 Execution Without Parameters (1), Bad Opsec Defaults Sacrificial Processes With Improper Arguments (1), Suspicious Process Parents (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1055.012",
+      "score": 100,
+      "comment": "1/1 samples detected; Potential JLI.dll Side-Loading (2), Windows Processes Suspicious Parent Directory (1), Suspect Svchost Activity (1), Uncommon Svchost Command Line Parameter (1), Uncommon Svchost Parent Process (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1059.001",
+      "score": 56,
+      "comment": "5/9 samples detected; Remote Thread Creation In Uncommon Target Image (82), Sysmon Configuration Change (2), Local Accounts Discovery (2), Malicious PowerShell Keywords (1), Suspicious Process Discovery With Get-Process (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1059.005",
+      "score": 100,
+      "comment": "1/1 samples detected; Cab File Extraction Via Wusa.EXE From Potentially Suspicious Paths (8), Cmd Launched with Hidden Start Flags to Suspicious Targets (1), Wscript Shell Run In CommandLine (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1068",
+      "score": 0,
+      "comment": "0/4 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1070.001",
+      "score": 0,
+      "comment": "0/2 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1070.006",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1087.002",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1098",
+      "score": 100,
+      "comment": "1/1 samples detected; Password Change on Directory Service Restore Mode (DSRM) Account (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1134",
+      "score": 0,
+      "comment": "0/3 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1134.001",
+      "score": 40,
+      "comment": "2/5 samples detected; Meterpreter or Cobalt Strike Getsystem Service Installation - System (1), Suspicious Service Installation (1), Uncommon Service Installation Image Path (1), Potential Meterpreter/CobaltStrike Activity (1), Abused Debug Privilege by Arbitrary Parent Processes (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1178",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1186",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1187",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1197",
+      "score": 0,
+      "comment": "0/4 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1218",
+      "score": 57,
+      "comment": "4/7 samples detected; Potentially Suspicious Rundll32 Activity (8), Suspicious Mshta.EXE Execution Patterns (1), Windows Shell/Scripting Processes Spawning Suspicious Programs (1)",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1218.005",
+      "score": 50,
+      "comment": "2/4 samples detected; Wscript Shell Run In CommandLine (2), Mshtml.DLL RunHTMLApplication Suspicious Usage (2), Windows Shell/Scripting Processes Spawning Suspicious Programs (2), Rundll32 Execution With Uncommon DLL Extension (1), Remotely Hosted HTA File Executed Via Mshta.EXE (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1218.010",
+      "score": 50,
+      "comment": "1/2 samples detected; Potential Regsvr32 Commandline Flag Anomaly (1), Potentially Suspicious Regsvr32 HTTP/FTP Pattern (1), Scripting/CommandLine Process Spawned Regsvr32 (1), Unusual Parent Process For Cmd.EXE (1), Network Connection Initiated By Regsvr32.EXE (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1218.011",
+      "score": 89,
+      "comment": "8/9 samples detected; Potentially Suspicious Rundll32 Activity (10), Windows Shell/Scripting Processes Spawning Suspicious Programs (3), Wscript Shell Run In CommandLine (2), Mshtml.DLL RunHTMLApplication Suspicious Usage (2), Rundll32 Execution With Uncommon DLL Extension (2)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1543.003",
+      "score": 0,
+      "comment": "0/8 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1547.001",
+      "score": 100,
+      "comment": "1/1 samples detected; CurrentVersion Autorun Keys Modification (1)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1548.002",
+      "score": 68,
+      "comment": "25/37 samples detected; HackTool - UACMe Akagi Execution (22), Unusual Parent Process For Cmd.EXE (5), CMSTP UAC Bypass via COM Object Access (4), Sdclt Child Processes (3), Bypass UAC Using DelegateExecute (3)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1558.003",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1562.004",
+      "score": 0,
+      "comment": "0/1 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1562.006",
+      "score": 0,
+      "comment": "0/3 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1569.002",
+      "score": 50,
+      "comment": "2/4 samples detected; Gzip Archive Decode Via PowerShell (3), Base64 Encoded PowerShell Command Detected (3), Suspicious FromBase64String Usage On Gzip Archive - Process Creation (3), Suspicious PowerShell Invocations - Specific - ProcessCreation (3), Suspicious SYSTEM User Process Creation (3)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1572",
+      "score": 0,
+      "comment": "0/4 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1574.002",
+      "score": 0,
+      "comment": "0/2 samples detected; no matching rule",
+      "enabled": true,
+      "showSubtechniques": true
+    }
+  ],
+  "gradient": {
+    "colors": [
+      "#ff6666ff",
+      "#ffe766ff",
+      "#8ec843ff"
+    ],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [
+    {
+      "label": "0% of samples detected",
+      "color": "#ff6666ff"
+    },
+    {
+      "label": "100% of samples detected",
+      "color": "#8ec843ff"
+    }
+  ],
+  "metadata": [
+    {
+      "name": "samples",
+      "value": "270"
+    },
+    {
+      "name": "rules",
+      "value": "2425"
+    }
+  ],
+  "showTacticRowBackground": true,
+  "tacticRowBackground": "#dddddd",
+  "selectTechniquesAcrossTactics": true,
+  "selectSubtechniquesWithParent": false
+}
