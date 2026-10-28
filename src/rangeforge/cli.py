@@ -16,6 +16,7 @@ from rangeforge import __version__
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from rangeforge.bench.runner import TaskResponse
     from rangeforge.detect import DetectionEngine
     from rangeforge.schema.events import NormalizedEvent
 
@@ -373,6 +374,123 @@ def lab_collect(
             f"[green]{host.name}[/green]: {n:,} new events -> {target}"
             + (f", {alerts} alerts" if detect else "")
         )
+
+
+bench_app = typer.Typer(help="LLM SOC-analyst benchmark.", no_args_is_help=True)
+app.add_typer(bench_app, name="bench")
+
+DEFAULT_TASKS = Path("bench") / "tasks.jsonl"
+
+
+@bench_app.command("build")
+def bench_build(
+    rule_dirs: Annotated[list[Path] | None, typer.Option("--rules", "-r")] = None,
+    benign: Annotated[
+        list[Path] | None,
+        typer.Option(help="JSONL of benign live telemetry (from rf lab collect)."),
+    ] = None,
+    tactic: Annotated[str | None, typer.Option(help="Only this dataset tactic slug.")] = None,
+    limit: Annotated[int, typer.Option(help="Max dataset samples (0 = all).")] = 0,
+    per_sample: Annotated[int, typer.Option(help="Max tasks per sample / per benign rule.")] = 3,
+    out: Annotated[Path, typer.Option()] = DEFAULT_TASKS,
+) -> None:
+    """Build triage tasks: malicious ones from labelled samples, benign ones from live lab noise."""
+    from itertools import chain
+
+    from rangeforge.bench import build_tasks, save_tasks
+    from rangeforge.datasets import EvtxAttackSamples
+    from rangeforge.lab.collect import read_jsonl
+
+    engine = _load_engine(rule_dirs or list(DEFAULT_RULE_DIRS))
+    source = EvtxAttackSamples()
+    entries = source.entries()
+    if tactic:
+        entries = [e for e in entries if e.tactic == tactic]
+    entries = [e for e in entries if e.techniques]
+    if limit:
+        entries = entries[:limit]
+    benign_events = chain.from_iterable(read_jsonl(p) for p in benign) if benign else None
+    with console.status(f"Building tasks from {len(entries)} samples..."):
+        source.fetch_all(entries)
+        tasks = build_tasks(
+            source, engine, entries=entries, benign_events=benign_events, max_per_sample=per_sample
+        )
+    n = save_tasks(tasks, out)
+    malicious = sum(1 for t in tasks if t.truth.verdict == "malicious")
+    console.print(
+        f"[green]{n} tasks[/green] ({malicious} malicious, {n - malicious} benign) -> {out}"
+    )
+
+
+@bench_app.command("run")
+def bench_run(
+    backend: Annotated[
+        str,
+        typer.Option(
+            "--backend",
+            "-b",
+            help="claude-cli | codex-cli | anthropic | openai | ollama | scripted",
+        ),
+    ],
+    model: Annotated[str | None, typer.Option("--model", "-m")] = None,
+    tasks_path: Annotated[Path, typer.Option("--tasks")] = DEFAULT_TASKS,
+    limit: Annotated[int, typer.Option(help="Max tasks (0 = all).")] = 0,
+    concurrency: Annotated[int, typer.Option("-j")] = 2,
+    out_dir: Annotated[Path, typer.Option(help="Where responses land (runs/bench).")] = Path("runs")
+    / "bench",
+    no_schema: Annotated[
+        bool, typer.Option(help="Do not pass a JSON schema to the backend.")
+    ] = False,
+) -> None:
+    """Answer every task with one model. Resumable: re-run to fill gaps."""
+    from rangeforge.bench import load_tasks
+    from rangeforge.bench.backends import create
+    from rangeforge.bench.runner import run_tasks, summarize_errors
+
+    be = create(backend, model)
+    tasks = load_tasks(tasks_path)
+    if limit:
+        tasks = tasks[:limit]
+    out = out_dir / f"{be.name}__{be.model.replace('/', '_').replace(':', '_')}.jsonl"
+    console.print(f"{be.describe()} on {len(tasks)} tasks -> {out}")
+
+    def progress(resp: TaskResponse, i: int, total: int) -> None:
+        if resp.refused:
+            status = "refused"
+        elif resp.error:
+            status = resp.error
+        else:
+            status = resp.answer.verdict if resp.answer else "?"
+        console.print(f"[dim]{i}/{total}[/dim] {resp.task_id} {status} {resp.latency_s:.1f}s")
+
+    responses = run_tasks(
+        be, tasks, out, concurrency=concurrency, structured=not no_schema, progress=progress
+    )
+    console.print(summarize_errors(responses.values()))
+
+
+@bench_app.command("report")
+def bench_report(
+    tasks_path: Annotated[Path, typer.Option("--tasks")] = DEFAULT_TASKS,
+    runs_dir: Annotated[Path, typer.Option()] = Path("runs") / "bench",
+    out: Annotated[Path | None, typer.Option(help="Write leaderboard markdown here.")] = None,
+) -> None:
+    """Score every response file in runs/bench and print the leaderboard."""
+    from rangeforge.bench import load_tasks, score_run
+    from rangeforge.bench.score import Leaderboard
+
+    tasks = load_tasks(tasks_path)
+    board = Leaderboard()
+    for path in sorted(runs_dir.glob("*.jsonl")):
+        score = score_run(tasks, path)
+        if score:
+            board.rows.append(score)
+    md = board.to_markdown()
+    console.print(md)
+    if out:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(md, encoding="utf-8")
+        console.print(f"[green]written to {out}")
 
 
 if __name__ == "__main__":
