@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rangeforge"
+version = "0.1.0"
+description = "Detection engineering lab and LLM SOC-analyst benchmark built on real host telemetry"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+authors = [{ name = "Adil Alperen Çiftci" }]
+keywords = ["detection-engineering", "sigma", "ocsf", "mitre-attack", "soc", "llm-evaluation", "blue-team"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Information Technology",
+  "Topic :: Security",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+  "pydantic>=2.9",
+  "typer>=0.12",
+  "rich>=13.7",
+  "pyyaml>=6.0",
+  "duckdb>=1.1",
+  "pysigma>=0.11",
+  "evtx>=0.8",
+  "httpx>=0.27",
+  "orjson>=3.10",
+]
+
+[project.optional-dependencies]
+lab = ["paramiko>=3.4", "pywinrm>=0.4"]
+dev = ["pytest>=8.3", "pytest-cov>=5.0", "ruff>=0.6", "mypy>=1.11", "types-PyYAML", "types-paramiko"]
+
+[project.scripts]
+rangeforge = "rangeforge.cli:app"
+rf = "rangeforge.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rangeforge"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "S", "SIM", "RUF"]
+ignore = ["S101", "S603", "S607"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["rangeforge"]
+mypy_path = "src"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = ["lab: requires live lab VMs", "network: requires internet"]
