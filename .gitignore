@@ -16,3 +16,5 @@ runs/
 .env
 lab.local.yaml
 *.evtx
+data/live/
+data/state/

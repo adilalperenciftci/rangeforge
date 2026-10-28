@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import orjson
 import typer
@@ -12,6 +12,12 @@ from rich.console import Console
 from rich.table import Table
 
 from rangeforge import __version__
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from rangeforge.detect import DetectionEngine
+    from rangeforge.schema.events import NormalizedEvent
 
 app = typer.Typer(
     name="rangeforge",
@@ -166,7 +172,7 @@ def rules_pull(
     console.print(f"[green]SigmaHQ rules checked out to {SIGMA_CACHE}")
 
 
-def _load_engine(rule_dirs: list[Path]) -> object:
+def _load_engine(rule_dirs: list[Path]) -> DetectionEngine:
     from rangeforge.detect import DetectionEngine
 
     engine = DetectionEngine()
@@ -186,10 +192,8 @@ def rules_stats(
     ] = None,
 ) -> None:
     """Compile rules and show level/tactic distribution and compile failures."""
-    from rangeforge.detect import DetectionEngine
 
     engine = _load_engine(rule_dirs or list(DEFAULT_RULE_DIRS))
-    assert isinstance(engine, DetectionEngine)
     levels: Counter[str] = Counter(r.level for r in engine.rules)
     tactics: Counter[str] = Counter(t for r in engine.rules for t in r.tactics)
     unrestricted = sum(1 for r in engine.rules if r.event_filter.unrestricted)
@@ -225,10 +229,8 @@ def coverage_run(
 
     from rangeforge.coverage import build_layer, replay_dataset, summarize, to_markdown
     from rangeforge.datasets import EvtxAttackSamples
-    from rangeforge.detect import DetectionEngine
 
     engine = _load_engine(rule_dirs or list(DEFAULT_RULE_DIRS))
-    assert isinstance(engine, DetectionEngine)
     source = EvtxAttackSamples()
     entries = source.entries()
     if tactic:
@@ -275,6 +277,102 @@ def coverage_run(
     table.add_row("right technique", f"{summary.rate_labelled:.0%} of {summary.labelled} labelled")
     console.print(table)
     console.print(f"[green]report written to {out}")
+
+
+lab_app = typer.Typer(help="Live lab hosts: status, telemetry collection.", no_args_is_help=True)
+app.add_typer(lab_app, name="lab")
+
+
+@lab_app.command("status")
+def lab_status(
+    inventory_path: Annotated[Path, typer.Option("--inventory", "-i")] = Path("lab.yaml"),
+) -> None:
+    """Reachability and sensor state of every host in the inventory."""
+    from rangeforge.lab import load_inventory
+    from rangeforge.lab.collect import AuditdCollector, Bookmarks, WindowsCollector
+
+    inventory = load_inventory(inventory_path)
+    marks = Bookmarks.load()
+    table = Table(title="lab")
+    table.add_column("host")
+    table.add_column("os")
+    table.add_column("address")
+    table.add_column("sensor state")
+    for host in inventory.hosts.values():
+        try:
+            if host.os == "windows":
+                counts = WindowsCollector(host, marks).tail_record_ids()
+                state = ", ".join(
+                    f"{c.split('/')[0].replace('Microsoft-Windows-', '')}={n:,}"
+                    for c, n in counts.items()
+                )
+            elif host.ssh and host.role != "isolated":
+                info = AuditdCollector(host, marks, inventory).status()
+                state = (
+                    f"auditd enabled={info.get('enabled')} "
+                    f"rules={info.get('rules')} lost={info.get('lost')}"
+                )
+            else:
+                state = "[dim]not collected[/dim]"
+        except Exception as exc:  # unreachable host must not break the table
+            state = f"[red]{type(exc).__name__}: {str(exc)[:80]}[/red]"
+        table.add_row(host.name, host.os, host.address, state)
+    console.print(table)
+
+
+@lab_app.command("collect")
+def lab_collect(
+    hosts: Annotated[
+        list[str] | None, typer.Argument(help="Host names (default: all sensors).")
+    ] = None,
+    inventory_path: Annotated[Path, typer.Option("--inventory", "-i")] = Path("lab.yaml"),
+    out: Annotated[Path, typer.Option(help="JSONL output directory.")] = Path("data") / "live",
+    detect: Annotated[bool, typer.Option(help="Run the Sigma engine on collected events.")] = False,
+    rule_dirs: Annotated[list[Path] | None, typer.Option("--rules", "-r")] = None,
+) -> None:
+    """Pull new telemetry from lab hosts (incremental) into data/live/<host>.jsonl."""
+    from rangeforge.lab import load_inventory
+    from rangeforge.lab.collect import AuditdCollector, Bookmarks, WindowsCollector, write_jsonl
+
+    inventory = load_inventory(inventory_path)
+    marks = Bookmarks.load()
+    selected = (
+        [inventory.get(h) for h in hosts]
+        if hosts
+        else [h for h in inventory.hosts.values() if h.role.startswith("sensor")]
+    )
+    engine = _load_engine(rule_dirs or list(DEFAULT_RULE_DIRS)) if detect else None
+
+    for host in selected:
+        collector = (
+            WindowsCollector(host, marks)
+            if host.os == "windows"
+            else AuditdCollector(host, marks, inventory)
+        )
+        target = out / f"{host.name}.jsonl"
+        alerts = 0
+
+        def tap(events: Iterator[NormalizedEvent]) -> Iterator[NormalizedEvent]:
+            nonlocal alerts
+            for event in events:
+                if engine is not None:
+                    for alert in engine.evaluate(event):
+                        alerts += 1
+                        line = (
+                            f"[yellow]{alert.level:>8}[/yellow] {alert.rule_title} "
+                            f"[dim]{alert.hostname} {', '.join(alert.techniques)}[/dim] "
+                            f"{alert.summary or ''}"
+                        )
+                        console.print(line[:200])
+                yield event
+
+        with console.status(f"collecting from {host.name}..."):
+            n = write_jsonl(tap(collector.collect()), target)
+        marks.save()
+        console.print(
+            f"[green]{host.name}[/green]: {n:,} new events -> {target}"
+            + (f", {alerts} alerts" if detect else "")
+        )
 
 
 if __name__ == "__main__":

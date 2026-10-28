@@ -1,0 +1,36 @@
+# RangeForge lab inventory. Secrets are referenced by path only.
+# Override anything in lab.local.yaml (git-ignored).
+hosts:
+  ubuntu:
+    address: 172.28.10.10
+    os: linux
+    role: sensor-linux
+    vm_name: Bluex-Ubuntu
+    ssh:
+      user: bluexadmin
+      key_file: C:\Hyper-V\BluexLab\secrets\bluexadmin_ed25519
+    tags: [jump]
+
+  kali:
+    address: 172.28.20.20
+    os: linux
+    role: isolated
+    vm_name: Bluex-Kali
+    ssh:
+      user: bluexadmin
+      key_file: C:\Hyper-V\BluexLab\secrets\bluexadmin_ed25519
+      jump_host: ubuntu
+    tags: [no-internet]
+
+  windows:
+    address: 172.28.10.30
+    os: windows
+    role: sensor-windows
+    vm_name: Bluex-Windows
+    winrm:
+      credential_file: C:\Hyper-V\BluexLab\secrets\windows-admin.credential.xml
+    channels:
+      - Microsoft-Windows-Sysmon/Operational
+      - Security
+      - Microsoft-Windows-PowerShell/Operational
+      - System
