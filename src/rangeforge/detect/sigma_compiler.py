@@ -140,13 +140,14 @@ def _regex_flags(value: SigmaRegularExpression) -> int:
 
 
 def _string_matcher(value: SigmaString) -> ValueMatcher:
-    flags = 0 if isinstance(value, SigmaCasedString) else re.IGNORECASE
+    fold = not isinstance(value, SigmaCasedString)
+    flags = re.DOTALL | (re.IGNORECASE if fold else 0)
     pattern = re.compile(sigma_string_to_regex(value), flags)
     if not value.contains_special():
-        plain = str(value).lower() if flags else str(value)
+        plain = str(value).lower() if fold else str(value)
 
         def exact(v: Any) -> bool:
-            return any((s.lower() if flags else s) == plain for s in _as_strings(v))
+            return any((s.lower() if fold else s) == plain for s in _as_strings(v))
 
         return exact
 
@@ -247,7 +248,7 @@ def _compile_field_expr(node: ConditionFieldEqualsValueExpression) -> Predicate:
 def _compile_keyword(node: ConditionValueExpression) -> Predicate:
     value = node.value
     if isinstance(value, SigmaString):
-        flags = 0 if isinstance(value, SigmaCasedString) else re.IGNORECASE
+        flags = re.DOTALL | (0 if isinstance(value, SigmaCasedString) else re.IGNORECASE)
         # Keyword search is a substring match unless the author used wildcards.
         regex = sigma_string_to_regex(value) if value.contains_special() else re.escape(str(value))
         pattern = re.compile(regex, flags)

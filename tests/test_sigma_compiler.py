@@ -146,3 +146,15 @@ def test_engine_indexes_and_alerts() -> None:
     assert alerts[0].fields["User"] == "LAB\\a"
     assert engine.stats.events_seen == 3
     assert engine.stats.alerts == 1
+
+
+def test_wildcard_spans_newlines() -> None:
+    yaml = (
+        "title: t\nlogsource:\n  product: windows\n  category: ps_script\n"
+        "detection:\n  sel:\n    ScriptBlockText|contains: 'needle'\n  condition: sel\n"
+    )
+    rule = compile_rule(SigmaRule.from_yaml(yaml))
+    multi = ev(
+        "Microsoft-Windows-PowerShell/Operational", 4104, ScriptBlockText="a\r\nb needle\r\nc"
+    )
+    assert rule.matches(multi)
