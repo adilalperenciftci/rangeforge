@@ -498,5 +498,94 @@ def bench_report(
         console.print(f"[green]written to {out}")
 
 
+harden_app = typer.Typer(help="Hardening as code: posture checks and drift.", no_args_is_help=True)
+app.add_typer(harden_app, name="harden")
+
+_SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+
+
+@harden_app.command("check")
+def harden_check(
+    hosts: Annotated[
+        list[str] | None, typer.Argument(help="Host names (default: all sensors).")
+    ] = None,
+    inventory_path: Annotated[Path, typer.Option("--inventory", "-i")] = Path("lab.yaml"),
+    out: Annotated[Path | None, typer.Option(help="Write a markdown report here.")] = None,
+    save: Annotated[bool, typer.Option(help="Store the snapshot for drift tracking.")] = True,
+) -> None:
+    """Collect a posture snapshot from each host and evaluate the hardening checks."""
+    from rangeforge.harden import collect_posture, evaluate, save_snapshot
+    from rangeforge.lab import load_inventory
+
+    inventory = load_inventory(inventory_path)
+    selected = (
+        [inventory.get(h) for h in hosts]
+        if hosts
+        else [h for h in inventory.hosts.values() if h.role.startswith("sensor")]
+    )
+    report: list[str] = []
+    for host in selected:
+        with console.status(f"collecting posture from {host.name}..."):
+            snapshot = collect_posture(host, inventory)
+        if save:
+            save_snapshot(snapshot)
+        findings = evaluate(snapshot.posture, host.os)
+        passed = sum(f.ok for f in findings)
+        failed = [f for f in findings if f.status == "fail"]
+        unknown = sum(f.status == "unknown" for f in findings)
+        table = Table(
+            title=(
+                f"{host.name}: {passed}/{len(findings)} pass, {len(failed)} fail, {unknown} unknown"
+            )
+        )
+        table.add_column("sev")
+        table.add_column("check")
+        table.add_column("observed")
+        for f in sorted(failed, key=lambda f: _SEVERITY_ORDER[f.check.severity]):
+            obs = ", ".join(f"{k}={v}" for k, v in f.observed.items())
+            table.add_row(f.check.severity, f"{f.check.id}: {f.check.title}", obs[:60])
+        console.print(table)
+        report.append(f"## {host.name} ({host.os}): {passed}/{len(findings)} pass\n")
+        report.append("| status | severity | check | observed | reference |")
+        report.append("|---|---|---|---|---|")
+        ordered = sorted(
+            findings, key=lambda f: (f.status != "fail", _SEVERITY_ORDER[f.check.severity])
+        )
+        for f in ordered:
+            obs = ", ".join(f"{k}={v}" for k, v in f.observed.items())
+            report.append(
+                f"| {f.status} | {f.check.severity} | {f.check.id}: {f.check.title} | {obs} | "
+                f"{f.check.reference or ''} |"
+            )
+        report.append("")
+    if out:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text("# Posture report\n\n" + "\n".join(report), encoding="utf-8")
+        console.print(f"[green]written to {out}")
+
+
+@harden_app.command("drift")
+def harden_drift(host: Annotated[str, typer.Argument(help="Host name.")]) -> None:
+    """Show what changed between the two most recent posture snapshots of a host."""
+    from rangeforge.harden import diff_snapshots, load_snapshots
+
+    snapshots = load_snapshots(host)
+    if len(snapshots) < 2:
+        console.print(f"need at least two snapshots for {host}, have {len(snapshots)}")
+        raise typer.Exit(1)
+    before, after = snapshots[-2], snapshots[-1]
+    changes = diff_snapshots(before, after)
+    table = Table(
+        title=f"{host}: {before.taken_at:%Y-%m-%d %H:%M} -> {after.taken_at:%Y-%m-%d %H:%M}, "
+        f"{len(changes)} changes"
+    )
+    table.add_column("setting")
+    table.add_column("before")
+    table.add_column("after")
+    for key, (a, b) in changes.items():
+        table.add_row(key, str(a)[:50], str(b)[:50])
+    console.print(table)
+
+
 if __name__ == "__main__":
     app()

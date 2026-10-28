@@ -8,7 +8,7 @@ before the next one starts.
 - OCSF-aligned `NormalizedEvent` with a flat native field view
 - Sysmon and Security channel mapping
 - EVTX reader on the Rust `evtx` parser
-- Linux auditd normalizer (next)
+- Linux auditd normalizer
 
 ## 2. Detection engine (done)
 
@@ -23,7 +23,7 @@ before the next one starts.
 - Replay of EVTX-ATTACK-SAMPLES with technique labels from file names
 - Technique / tactic coverage, noisy-rule ranking, missed-sample list
 - ATT&CK Navigator layer export
-- Curated label overrides for samples that carry no technique id (next)
+- Curated labels for every capture (128 hand-reviewed)
 - OTRF Security-Datasets as a second source (next)
 
 ## 4. Live lab telemetry
@@ -43,6 +43,7 @@ before the next one starts.
   latency; refusal-rate tracking
 - Published leaderboard and methodology write-up
 
-## 6. Hardening as code
+## 6. Hardening as code (done)
 
-- CIS-style checks for the lab hosts with drift detection over time
+- Read-only posture collectors for Windows and Linux, 51 CIS-referenced checks
+  mapped to the ATT&CK techniques they mitigate, snapshot history and drift

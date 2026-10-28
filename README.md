@@ -38,7 +38,7 @@ ingests, detects, measures and benchmarks.
 | `rangeforge.coverage` | Replay labelled samples, score technique/tactic coverage, export an ATT&CK Navigator layer | done |
 | `rangeforge.lab` | Inventory, SSH/WinRM transports, incremental collectors for live hosts, telemetry provisioning scripts | done |
 | `rangeforge.bench` | SOC-analyst triage benchmark: task construction, model backends, resumable runner, scoring, leaderboard | done |
-| hardening checks | CIS-style drift checks for lab hosts | planned |
+| `rangeforge.harden` | Read-only posture collectors, 51 CIS-referenced checks mapped to ATT&CK, snapshot drift | done |
 
 ## Results so far
 
@@ -50,7 +50,7 @@ EVTX-ATTACK-SAMPLES (270 captures, 36,564 events, every capture carrying a hand-
 | samples with at least one alert | 73% |
 | captures where a rule tagged with the *right* technique fired | 38% (102/270) |
 | best tactic (any alert) | privilege-escalation, 86% |
-| worst tactic (any alert) | discovery, 36% |
+| worst tactic (any alert) | discovery, 45% |
 
 The per-technique heat-map is in [`docs/results/navigator-layer.json`](docs/results/navigator-layer.json)
 (load it in the [ATT&CK Navigator](https://mitre-attack.github.io/attack-navigator/)); the
@@ -89,6 +89,13 @@ rf lab collect --detect            # pull new events, run the rules, print alert
 Provisioning scripts for a well-instrumented target live in `infra/`:
 `Enable-Telemetry.ps1` (Sysmon + audit policy + PowerShell logging) and
 `enable-telemetry.sh` (auditd rule set).
+
+### Check hardening posture
+
+```bash
+rf harden check --out docs/results/posture.md   # 30 Windows + 21 Linux checks, snapshot stored
+rf harden drift windows                          # what changed since the previous snapshot
+```
 
 ### Benchmark a model
 

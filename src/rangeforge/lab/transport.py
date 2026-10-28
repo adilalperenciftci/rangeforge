@@ -3,9 +3,11 @@ WinRM (pywinrm, NTLM). Both expose ``run()`` returning (exit code, stdout, stder
 
 from __future__ import annotations
 
+import base64
 import json
 import shlex
 import subprocess
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -160,6 +162,36 @@ class WinRmTransport:
             result.std_out.decode("utf-8", "replace"),
             result.std_err.decode("utf-8", "replace"),
         )
+
+    def run_script(self, script: str, *, chunk: int = 1500) -> RunResult:
+        """Run a long PowerShell script.
+
+        WinRM passes ``run_ps`` scripts on the command line (base64), which is
+        capped at ~8 KB. Longer scripts are shipped in chunks to a temp file
+        on the target and executed from there.
+        """
+        if len(script) < 2500:
+            return self.run_ps(script)
+        data = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
+        name = f"rf-{uuid.uuid4().hex}.ps1"
+        remote = f"$env:TEMP\\{name}"
+        self.run_ps(f'Remove-Item -LiteralPath "{remote}" -ErrorAction SilentlyContinue')
+        for i in range(0, len(data), chunk):
+            piece = data[i : i + chunk]
+            result = self.run_ps(
+                f"Add-Content -LiteralPath \"{remote}\" -Value '{piece}' -NoNewline -Encoding ascii"
+            )
+            if not result.ok:
+                return result
+        runner = (
+            f'$b = [Convert]::FromBase64String((Get-Content -LiteralPath "{remote}" -Raw)); '
+            f"$s = [Text.Encoding]::Unicode.GetString($b); "
+            f'$f = "{remote}.run.ps1"; Set-Content -LiteralPath $f -Value $s -Encoding Unicode; '
+            "try { & powershell.exe -NoProfile -NonInteractive "
+            "-ExecutionPolicy Bypass -File $f } "
+            f'finally {{ Remove-Item -LiteralPath $f, "{remote}" -ErrorAction SilentlyContinue }}'
+        )
+        return self.run_ps(runner)
 
     def run(self, command: str, **_: Any) -> RunResult:
         return self.run_ps(command)
