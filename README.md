@@ -149,6 +149,12 @@ Issues and pull requests are welcome, especially new dataset adapters, Linux
 rule coverage, and additional model backends. Run `ruff check`, `ruff format`,
 `mypy` and `pytest` before opening a PR; CI runs them on Linux and Windows.
 
+## Maintainer
+
+RangeForge is developed by Adil Alperen Çiftci, founder of
+[Yalın Office](https://yalinoffice.com.tr), and is published under the
+Yalın Office brand: <https://yalinoffice.com.tr/rangeforge>.
+
 ## License
 
 Apache-2.0. Datasets and rule sets are fetched from their upstream projects
